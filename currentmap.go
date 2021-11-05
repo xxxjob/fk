@@ -131,9 +131,9 @@ func (m Cmap) Keys() []string {
 	go func() {
 		// Foreach shard.
 		wg := sync.WaitGroup{}
-		wg.Add(SHARD_COUNT)
+		wg.Add(shardSize)
 		for _, shard := range m {
-			go func(shard *ConcurrentMapShared) {
+			go func(shard *CurrentMapShard) {
 				// Foreach key, value pair.
 				shard.RLock()
 				for key := range shard.items {
