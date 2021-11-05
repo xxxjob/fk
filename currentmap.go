@@ -124,3 +124,33 @@ func fnv(key string) uint32 {
 	}
 	return hash
 }
+
+func (m Cmap) Keys() []string {
+	count := m.Count()
+	ch := make(chan string, count)
+	go func() {
+		// Foreach shard.
+		wg := sync.WaitGroup{}
+		wg.Add(SHARD_COUNT)
+		for _, shard := range m {
+			go func(shard *ConcurrentMapShared) {
+				// Foreach key, value pair.
+				shard.RLock()
+				for key := range shard.items {
+					ch <- key
+				}
+				shard.RUnlock()
+				wg.Done()
+			}(shard)
+		}
+		wg.Wait()
+		close(ch)
+	}()
+
+	// Generate keys
+	keys := make([]string, 0, count)
+	for k := range ch {
+		keys = append(keys, k)
+	}
+	return keys
+}
